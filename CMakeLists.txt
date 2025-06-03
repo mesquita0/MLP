@@ -12,9 +12,13 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project (MLP)
+project(MLP)
 
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
-# Add source to this project's executable.
-add_executable(MLP ${SOURCE_FILES} "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+add_library(mlp STATIC ${SRC_FILES})
+add_executable(MLP "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+
+target_include_directories(mlp PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+target_link_libraries(MLP PUBLIC mlp)
