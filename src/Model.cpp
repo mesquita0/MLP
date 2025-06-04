@@ -39,23 +39,31 @@ void Model::add(Layer* layer) {
     this->layers.push_back(layer);
 }
 
-void Model::fit(const double* x_train, const double* y_train, int num_training_examples, int num_epochs) {
+void Model::fit(const std::vector<Vector>& x_train, const std::vector<Vector>& y_train, int num_epochs) {
     for (int i = 0; i < num_epochs; i++) {
-        for (int j = 0; i < num_training_examples; i++) {
-            const double* x_example = x_train + j * num_training_examples;
-            const double* y_example = y_train + j * num_training_examples;
+        for (int j = 0; i < x_train.size(); i++) {
+            const Vector x_example = x_train[j];
+            const Vector y_example = y_train[j];
 
             evaluate(x_example);
             
-            double error = getError(last_layer->get_hidden_neurons(), y_example, 1);
+            double error = getError(last_layer->get_hidden_neurons(), y_example);
 
-            // TODO: Backpropagation
+            // Backpropagation
+            // J(y, y^)  = ||y - y^||**2
+            // => dJ/dy^ = -2(y - y^) = 2(y^ - y) 
+            Vector hessian = (last_layer->get_hidden_neurons() - y_example) * 2;
 
+            last_layer->backpropagate(layers[layers.size() - 2], nullptr, hessian, learning_rate);
+
+            for (int k = layers.size() - 2; k > 0; k--) {
+                layers[k]->backpropagate(layers[k - 1], layers[k + 1], hessian, learning_rate);
+            }
         }
     }
 }
 
-std::vector<double> Model::evaluate(const double* input) {
+Vector Model::evaluate(const Vector& input) {
     first_layer->set_neurons(input);
     first_layer->process_layer(nullptr);
 
@@ -63,40 +71,25 @@ std::vector<double> Model::evaluate(const double* input) {
         layers[i]->process_layer(layers[i - 1]);
     }
 
-    const double* neurons = last_layer->get_hidden_neurons();
-
-    std::vector<double> result(neurons, neurons + last_layer->get_num_neurons_output());
-
-    return result;
+    return last_layer->get_hidden_neurons();
 }
 
-void Model::setErrorFunction(double (*error_func)(double, int)) {
-    this->error_func = error_func;
+void Model::setLearningRate(double learning_rate) {
+    this->learning_rate = learning_rate;
 }
 
-double Model::getError(const double* predicted, const double* expected, int num_examples) {
+double Model::getError(const Vector& predicted, const Vector& expected) {
+    // ||y_i - y^_i||**2 = <(y_i - y^_i), (y_i - y^_i)>
+    Vector diff = expected - predicted;
+    return diff.inner(diff);
+}
+
+double Model::getError(const std::vector<Vector>& predicted, const std::vector<Vector>& expected) {
     double error = 0;
-    
-    for (int i = 0; i < num_examples; i++) {
-        int n = last_layer->get_num_neurons_output();
-        const double* pred_example = predicted + i * n;
-        const double* expt_example = expected  + i * n;
 
-        // ||y_i - y^_i||**2 = <(y_i - y^_i), (y_i - y^_i)>
-        double error_example = 0;
-        for (int j = 0; j < n; j++)
-            error_example += pow((pred_example - expt_example), 2);
-        
-        error += error_func(error_example, num_examples);
+    for (int i = 0; i < predicted.size(); i++) {
+        error += getError(predicted[i], expected[i]);
     }
 
     return error;
-}
-
-double MSE(double error, int n) {
-    return pow(error, 2) / n;
-}
-
-double MAE(double error, int n) {
-    return abs(error) / n;
 }

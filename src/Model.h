@@ -5,15 +5,11 @@
 #include <cstdint>
 #include <vector>
 
-double MSE(double error, int n);
-double MAE(double error, int n);
-
 class Model {
     std::vector<Layer*> layers;
     InputLayer*         first_layer;
     Layer*              last_layer;
-
-    double (*error_func)(double, int) = MSE;
+    double              learning_rate = 0.01;
 
 public:
     Model() = default;
@@ -22,10 +18,12 @@ public:
 
     void add(Layer* layer);
 
-    void fit(const double* x_train, const double* y_train, int num_training_examples, int num_epochs);
+    void fit(const std::vector<Vector>& x_train, const std::vector<Vector>& y_train, int num_epochs);
 
-    std::vector<double> evaluate(const double* input);
+    Vector evaluate(const Vector& input);
 
-    void setErrorFunction(double (*error_func)(double, int));
-    double getError(const double* predicted, const double* expected, int num_examples);
+    void setLearningRate(double learning_rate);
+
+    double getError(const Vector& predicted, const Vector& expected);
+    double getError(const std::vector<Vector>& predicted, const std::vector<Vector>& expected);
 };
