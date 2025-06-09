@@ -5,14 +5,15 @@ DenseLayer::DenseLayer(int num_outputs, const Activation& activation) : activati
     this->num_inputs = 0;
     this->num_outputs = num_outputs;
 
-    hidden_neurons = Vector(num_outputs);
-    bias	       = Vector(num_outputs);
-    weights        = Matrix();
+    hidden_neurons  = Vector(num_outputs);
+    pre_act_neurons = Vector(num_outputs);
+    bias	        = Vector(num_outputs);
+    weights         = Matrix();
 }
 
 void DenseLayer::setNumInputs(int num_inputs) {
     this->num_inputs = num_inputs;
-    weights = Matrix(num_inputs, num_outputs);
+    weights = Matrix(num_outputs, num_inputs);
 }
 
 void DenseLayer::randomizeWeights() {
@@ -30,10 +31,24 @@ void DenseLayer::randomizeWeights() {
 }
 
 void DenseLayer::process_layer(Layer* prev_layer) {
-    hidden_neurons = weights * prev_layer->get_hidden_neurons() + bias;
-    hidden_neurons.apply(activation);
+    pre_act_neurons = weights * prev_layer->get_hidden_neurons() + bias;
+    hidden_neurons.copy(pre_act_neurons);
+    activation.applyActivation(hidden_neurons);
 }
 
-void backpropagate(Layer* prev_layer, Layer* next_layer, const Vector& hessian, double learning_rate) {
+void DenseLayer::backpropagate(Layer* prev_layer, Layer* next_layer, Vector& hessian, double learning_rate) {
+    DenseLayer* next_dlayer;
+    if ((next_dlayer = dynamic_cast<DenseLayer*>(next_layer)) != nullptr) {
+        hessian = next_dlayer->getWeights().transpose() * hessian;
+    }
 
+    activation.applyDerivative(pre_act_neurons);
+    hessian = hessian.hadamard(pre_act_neurons);
+
+    // Update bias
+    bias = bias - hessian * learning_rate;
+
+    // Update weights
+    Matrix delta = hessian.outer(prev_layer->get_hidden_neurons());
+    weights = weights - delta * learning_rate;
 }

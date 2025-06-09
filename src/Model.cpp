@@ -41,14 +41,12 @@ void Model::add(Layer* layer) {
 
 void Model::fit(const std::vector<Vector>& x_train, const std::vector<Vector>& y_train, int num_epochs) {
     for (int i = 0; i < num_epochs; i++) {
-        for (int j = 0; i < x_train.size(); i++) {
+        for (int j = 0; j < x_train.size(); j++) {
             const Vector x_example = x_train[j];
             const Vector y_example = y_train[j];
 
             evaluate(x_example);
             
-            double error = getError(last_layer->get_hidden_neurons(), y_example);
-
             // Backpropagation
             // J(y, y^)  = ||y - y^||**2
             // => dJ/dy^ = -2(y - y^) = 2(y^ - y) 
@@ -57,7 +55,7 @@ void Model::fit(const std::vector<Vector>& x_train, const std::vector<Vector>& y
             last_layer->backpropagate(layers[layers.size() - 2], nullptr, hessian, learning_rate);
 
             for (int k = layers.size() - 2; k > 0; k--) {
-                layers[k]->backpropagate(layers[k - 1], layers[k + 1], hessian, learning_rate);
+                layers[k]->backpropagate(layers[k - 1], dynamic_cast<DenseLayer*>(layers[k + 1]), hessian, learning_rate);
             }
         }
     }

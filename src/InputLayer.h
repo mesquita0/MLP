@@ -1,5 +1,6 @@
 #pragma once
 #include "Layer.h"
+#include "Matrix.h"
 #include "Vector.h"
 
 class InputLayer : public Layer {
@@ -16,5 +17,5 @@ public:
 
     inline void process_layer(Layer* prev_layer) override { return; }
 
-    inline void backpropagate(Layer* prev_layer, Layer* next_layer, const Vector& hessian, double learning_rate) { return; }
+    inline void backpropagate(Layer* prev_layer, Layer* next_layer, Vector& hessian, double learning_rate) { return; }
 };
