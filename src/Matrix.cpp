@@ -51,6 +51,7 @@ Matrix& Matrix::operator=(const Matrix& m) {
 }
 
 double Matrix::operator()(int i, int j) const {
+    if (i >= num_rows || j >= num_columns) throw;
     return matrix[i * num_columns + j];
 }
 

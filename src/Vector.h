@@ -32,8 +32,8 @@ public:
     inline const double* end() const { return &this->vec[size]; }
 
     Vector& operator=(const Vector& v);
-    double  operator[](int i) const { return vec[i]; }
-    double& operator[](int i) { return vec[i]; }
+    double  operator[](int i) const { if (i >= size) throw; return vec[i]; }
+    double& operator[](int i) { if (i >= size) throw; return vec[i]; }
     Vector  operator+(const Vector& other_vec) const;
     Vector  operator-() const { return (*this) * -1; }
     Vector  operator-(const Vector& other_vec) const { return (*this) + (-other_vec); }
