@@ -38,3 +38,13 @@ class Sigmoid : public Activation {
     double derivative(double x) const { return deriv(x); }
     void   applyDerivative(Vector& vector) const { return vector.apply(deriv); }
 };
+
+class Tanh : public Activation {
+    static constexpr double (*func)(double) = [](double x) { return tanh(x); };
+    static constexpr double (*deriv)(double) = [](double x) { return 1 / cosh(x); };
+
+    double activation(double x) const { return func(x); }
+    void   applyActivation(Vector& vector) const { vector.apply(func); }
+    double derivative(double x) const { return deriv(x); }
+    void   applyDerivative(Vector& vector) const { return vector.apply(deriv); }
+};
