@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
+#include <format>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -12,16 +13,18 @@
 
 constexpr int num_inputs  = 1;
 constexpr int num_outputs = 3;
-constexpr int epochs      = 100000;
+constexpr int epochs      = 100'000;
 
 int main() {
+    Sigmoid activation = Sigmoid();
+
     std::vector<Layer*> layers = {{
         new InputLayer(num_inputs),
-        new DenseLayer(8, Sigmoid()),
-        new DenseLayer(num_outputs, Sigmoid()),
+        new DenseLayer(7, activation),
+        new DenseLayer(num_outputs, activation),
     }};
     Model model = Model(layers);
-    model.setLearningRate(0.05);
+    model.setLearningRate(0.1);
 
     std::vector<Vector> x_train = {};
     std::vector<Vector> y_train = {};
@@ -43,18 +46,24 @@ int main() {
 
     model.fit(x_train, y_train, epochs);
 
+    double error = 0;
     for (Vector& vec : x_train) {
         Vector result = model.evaluate(vec);
 
          std::string result_str = std::accumulate(
             std::next(result.begin()),
             result.end(),
-            std::to_string(result[0]),
+            std::format("{:.1f}", result[0]),
             [](const std::string& acc, double x) {
-                return acc + ", " + std::to_string(x);
+                return acc + ", " + std::format("{:.1f}", x);
             }
-        );
+         );
 
-         std::cout << vec[0] << ": [ " << result_str << " ], error: " << model.getError(result, y_train[vec[0]]) << '\n';
+         double error_example = model.getError(result, y_train[vec[0]]);
+         error += pow(error_example, 2) / 8;
+
+         std::cout << vec[0] << ": [ " << result_str << " ], error: " << error_example << '\n';
     }
+
+    std::cout << "MSE: " << error << '\n';
 }
