@@ -19,6 +19,26 @@ class Linear : public Activation {
     void   applyDerivative(Vector& vector) const { return vector.apply(deriv); }
 };
 
+class ReLU : public Activation {
+    static constexpr double (*func)(double) = [](double x) { return std::max(0.0, x); };
+    static constexpr double (*deriv)(double) = [](double x) { return (x < 0) ? 0.0 : 1.0; };
+
+    double activation(double x) const { return func(x); }
+    void   applyActivation(Vector& vector) const { vector.apply(func); }
+    double derivative(double x) const { return deriv(x); }
+    void   applyDerivative(Vector& vector) const { return vector.apply(deriv); }
+};
+
+class LeakyReLU : public Activation {
+    static constexpr double (*func)(double) = [](double x) { return std::max(0.1*x, x); };
+    static constexpr double (*deriv)(double) = [](double x) { return (x < 0) ? 0.1 : 1.0; };
+
+    double activation(double x) const { return func(x); }
+    void   applyActivation(Vector& vector) const { vector.apply(func); }
+    double derivative(double x) const { return deriv(x); }
+    void   applyDerivative(Vector& vector) const { return vector.apply(deriv); }
+};
+
 class Sin : public Activation {
     static constexpr double (*func)(double)  = [](double x) { return sin(x); };
     static constexpr double (*deriv)(double) = [](double x) { return cos(x); };
